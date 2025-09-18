@@ -33,6 +33,7 @@ public class SimulationCache
         cachedSimpleEnergyBalances = [];
 
     private readonly Dictionary<MicrobeSpecies, float> cachedBaseSpeeds = new();
+    private readonly Dictionary<MicrobeSpecies, float> cachedBaseRotationSpeeds = new();
     private readonly Dictionary<MicrobeSpecies, float> cachedBaseHexSizes = new();
 
     private readonly Dictionary<(MicrobeSpecies, BiomeConditions, CompoundDefinition, CompoundDefinition), float>
@@ -117,6 +118,19 @@ public class SimulationCache
             species.MembraneRigidity, species.IsBacteria, true);
 
         cachedBaseSpeeds.Add(species, cached);
+        return cached;
+    }
+
+    public float GetRotationSpeedForSpecies(MicrobeSpecies species)
+    {
+        if (cachedBaseRotationSpeeds.TryGetValue(species, out var cached))
+        {
+            return cached;
+        }
+
+        cached = MicrobeInternalCalculations.CalculateRotationSpeed(species.Organelles.Organelles);
+
+        cachedBaseRotationSpeeds.Add(species, cached);
         return cached;
     }
 
@@ -401,6 +415,7 @@ public class SimulationCache
         cachedPressureScores.Clear();
         cachedSimpleEnergyBalances.Clear();
         cachedBaseSpeeds.Clear();
+        cachedBaseRotationSpeeds.Clear();
         cachedBaseHexSizes.Clear();
         cachedCompoundScores.Clear();
         cachedGeneratedCompound.Clear();
