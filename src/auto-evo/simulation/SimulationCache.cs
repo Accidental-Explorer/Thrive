@@ -289,8 +289,10 @@ public class SimulationCache
         // one dictionary lookup
         var predatorHexSize = GetBaseHexSizeForSpecies(predator);
         var predatorSpeed = GetSpeedForSpecies(predator);
+        var predatorRotationSpeed = GetRotationSpeedForSpecies(predator);
         var preyHexSize = GetBaseHexSizeForSpecies(prey);
         var preySpeed = GetSpeedForSpecies(prey);
+        var preyRotationSpeed = GetRotationSpeedForSpecies(prey);
         var enzymesScore = GetEnzymesScore(predator, prey.MembraneType.DissolverEnzyme);
         var (pilusScore, oxytoxyScore, predatorSlimeJetScore, _) =
             GetPredationToolsRawScores(predator);
@@ -312,12 +314,15 @@ public class SimulationCache
                 // You catch more preys if you are fast, and if they are slow.
                 // This incentivizes engulfment strategies in these cases.
                 catchScore += predatorSpeed / preySpeed;
+
+                // But they may escape if they move away before you can turn to chase them
+                catchScore -= 10 * (predatorRotationSpeed * preySpeed);
             }
 
             // ... but you may also catch them by luck (e.g. when they run into you),
             // and this is especially easy if you're huge.
             // This is also used to incentivize size in microbe species.
-            catchScore += Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY * predatorHexSize;
+            catchScore += Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY * predatorHexSize * (1f + preyRotationSpeed);
 
             // Allow for some degree of lucky engulfment
             engulfmentScore = catchScore * Constants.AUTO_EVO_ENGULF_PREDATION_SCORE;
