@@ -313,16 +313,14 @@ public class SimulationCache
             {
                 // You catch more preys if you are fast, and if they are slow.
                 // This incentivizes engulfment strategies in these cases.
-                catchScore += predatorSpeed / preySpeed;
-
                 // But they may escape if they move away before you can turn to chase them
-                catchScore -= 10 * (predatorRotationSpeed * preySpeed);
+                catchScore += (predatorSpeed / preySpeed) * (1.0f - predatorRotationSpeed / 2);
             }
 
             // ... but you may also catch them by luck (e.g. when they run into you),
             // and this is especially easy if you're huge.
             // This is also used to incentivize size in microbe species.
-            catchScore += Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY * predatorHexSize * (1f + preyRotationSpeed);
+            catchScore += Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY * predatorHexSize * (1.0f + preyRotationSpeed);
 
             // Allow for some degree of lucky engulfment
             engulfmentScore = catchScore * Constants.AUTO_EVO_ENGULF_PREDATION_SCORE;
@@ -335,7 +333,10 @@ public class SimulationCache
             predatorSlimeJetScore *= 0.5f;
 
         // Pili are much more useful if the microbe can close to melee
-        pilusScore *= predatorSpeed > preySpeed ? 1.0f : Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY;
+        pilusScore *= predatorSpeed > preySpeed ? 1.0f : Constants.AUTO_EVO_ENGULF_LUCKY_CATCH_PROBABILITY * (1.0f + preyRotationSpeed);
+
+        // Pili are also more useful if you can turn them towards the target in time
+        pilusScore *= 1.0f - predatorRotationSpeed / 2;
 
         // Predators are less likely to use toxin against larger prey, unless they are opportunistic
         if (preyHexSize > predatorHexSize)
@@ -357,6 +358,9 @@ public class SimulationCache
 
         // Prey that resist toxin are obviously weaker to it
         oxytoxyScore /= prey.MembraneType.ToxinResistance;
+
+        // Toxins also require facing and tracking the target
+        oxytoxyScore *= 1.0f - predatorRotationSpeed / 2;
 
         var scoreMultiplier = 1.0f;
 
